@@ -1,3 +1,4 @@
+// script.js
 // ==============================================
 // DOM Content Loaded Event
 // ==============================================
@@ -9,100 +10,191 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize all interactive features of the application
  */
 function initializeApp() {
-    initializeThemeToggle();
-    initializeCounter();
+    initializeThemeSelector();
+    initializeDrawingBoard();
+    initializeFAQ();
     initializeFormValidation();
     initializePasswordToggle();
     initializeModal();
 }
 
 // ==============================================
-// FEATURE 1: Theme Toggle Functionality
+// FEATURE 1: Theme Selector Functionality
 // ==============================================
-function initializeThemeToggle() {
-    const themeToggle = document.getElementById('themeToggle');
+function initializeThemeSelector() {
+    const themeDropdown = document.getElementById('themeDropdown');
+    const colorPicker = document.getElementById('colorPicker');
     const body = document.body;
     
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-        themeToggle.textContent = 'Switch to Light Mode';
+    if (savedTheme) {
+        themeDropdown.value = savedTheme;
+        applyTheme(savedTheme);
+    }
+    
+    // Check for saved color preference
+    const savedColor = localStorage.getItem('themeColor');
+    if (savedColor) {
+        colorPicker.value = savedColor;
+        document.documentElement.style.setProperty('--primary-color', savedColor);
     }
     
     /**
-     * Toggle between light and dark themes
+     * Handle theme dropdown changes
      */
-    themeToggle.addEventListener('click', function() {
-        body.classList.toggle('dark-mode');
+    themeDropdown.addEventListener('change', function() {
+        const selectedTheme = this.value;
+        applyTheme(selectedTheme);
+        localStorage.setItem('theme', selectedTheme);
+    });
+    
+    /**
+     * Handle color picker changes
+     */
+    colorPicker.addEventListener('input', function() {
+        const selectedColor = this.value;
+        document.documentElement.style.setProperty('--primary-color', selectedColor);
+        localStorage.setItem('themeColor', selectedColor);
+    });
+    
+    /**
+     * Apply the selected theme
+     * @param {string} theme - The theme to apply
+     */
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            body.classList.add('dark-theme');
+        } else if (theme === 'system') {
+            // Check system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+        } else {
+            body.classList.remove('dark-theme');
+        }
+    }
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (themeDropdown.value === 'system') {
+                applyTheme('system');
+            }
+        });
+    }
+}
+
+// ==============================================
+// FEATURE 2: Interactive Drawing Board
+// ==============================================
+function initializeDrawingBoard() {
+    const canvas = document.getElementById('drawingBoard');
+    const clearBtn = document.getElementById('clearBoard');
+    const colorBtns = document.querySelectorAll('.color-btn');
+    const ctx = canvas.getContext('2d');
+    
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let strokeColor = '#ff3b30';
+    let lineWidth = 5;
+    
+    // Set canvas background to white
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    /**
+     * Start drawing
+     */
+    function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+    
+    /**
+     * Draw on the canvas
+     */
+    function draw(e) {
+        if (!isDrawing) return;
         
-        // Update button text and save preference
-        if (body.classList.contains('dark-mode')) {
-            this.textContent = 'Switch to Light Mode';
-            localStorage.setItem('theme', 'dark');
-        } else {
-            this.textContent = 'Switch to Dark Mode';
-            localStorage.setItem('theme', 'light');
-        }
-    });
-}
-
-// ==============================================
-// FEATURE 2: Interactive Counter
-// ==============================================
-function initializeCounter() {
-    const counterValue = document.getElementById('counterValue');
-    const incrementBtn = document.getElementById('increment');
-    const decrementBtn = document.getElementById('decrement');
-    const resetBtn = document.getElementById('resetCounter');
-    
-    let count = 0;
-    
-    /**
-     * Update counter display with current value
-     */
-    function updateCounter() {
-        counterValue.textContent = count;
-        // Add visual feedback for positive/negative values
-        if (count > 0) {
-            counterValue.style.color = '#28a745';
-        } else if (count < 0) {
-            counterValue.style.color = '#dc3545';
-        } else {
-            counterValue.style.color = '#333';
-        }
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        [lastX, lastY] = [e.offsetX, e.offsetY];
     }
     
     /**
-     * Increment counter value
+     * Stop drawing
      */
-    incrementBtn.addEventListener('click', function() {
-        count++;
-        updateCounter();
-    });
+    function stopDrawing() {
+        isDrawing = false;
+    }
     
     /**
-     * Decrement counter value
+     * Clear the canvas
      */
-    decrementBtn.addEventListener('click', function() {
-        count--;
-        updateCounter();
-    });
+    function clearCanvas() {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     
-    /**
-     * Reset counter to zero
-     */
-    resetBtn.addEventListener('click', function() {
-        count = 0;
-        updateCounter();
-    });
+    // Event listeners for drawing
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
     
-    // Initialize counter display
-    updateCounter();
+    // Clear button
+    clearBtn.addEventListener('click', clearCanvas);
+    
+    // Color buttons
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            strokeColor = this.dataset.color;
+            colorBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
 }
 
 // ==============================================
-// FEATURE 3: Custom Form Validation
+// FEATURE 3: Collapsible FAQ Section
+// ==============================================
+function initializeFAQ() {
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    
+    /**
+     * Toggle FAQ answer visibility
+     */
+    faqQuestions.forEach(question => {
+        question.addEventListener('click', function() {
+            const answer = this.nextElementSibling;
+            const icon = this.querySelector('.icon i');
+            
+            // Toggle active class
+            answer.classList.toggle('active');
+            
+            // Change icon
+            if (answer.classList.contains('active')) {
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            } else {
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+            }
+        });
+    });
+}
+
+// ==============================================
+// FEATURE 4: Custom Form Validation
 // ==============================================
 function initializeFormValidation() {
     const form = document.getElementById('contactForm');
@@ -120,18 +212,24 @@ function initializeFormValidation() {
         
         if (name === '') {
             nameError.textContent = 'Name is required';
-            nameInput.style.borderColor = '#dc3545';
+            nameInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
         if (name.length < 2) {
             nameError.textContent = 'Name must be at least 2 characters';
-            nameInput.style.borderColor = '#dc3545';
+            nameInput.style.borderColor = 'var(--error-color)';
+            return false;
+        }
+        
+        if (!/^[a-zA-Z\s]+$/.test(name)) {
+            nameError.textContent = 'Name can only contain letters and spaces';
+            nameInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
         nameError.textContent = '';
-        nameInput.style.borderColor = '#28a745';
+        nameInput.style.borderColor = 'var(--success-color)';
         return true;
     }
     
@@ -146,18 +244,18 @@ function initializeFormValidation() {
         
         if (email === '') {
             emailError.textContent = 'Email is required';
-            emailInput.style.borderColor = '#dc3545';
+            emailInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
         if (!emailRegex.test(email)) {
             emailError.textContent = 'Please enter a valid email address';
-            emailInput.style.borderColor = '#dc3545';
+            emailInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
         emailError.textContent = '';
-        emailInput.style.borderColor = '#28a745';
+        emailInput.style.borderColor = 'var(--success-color)';
         return true;
     }
     
@@ -171,18 +269,24 @@ function initializeFormValidation() {
         
         if (password === '') {
             passwordError.textContent = 'Password is required';
-            passwordInput.style.borderColor = '#dc3545';
+            passwordInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
-        if (password.length < 6) {
-            passwordError.textContent = 'Password must be at least 6 characters';
-            passwordInput.style.borderColor = '#dc3545';
+        if (password.length < 8) {
+            passwordError.textContent = 'Password must be at least 8 characters';
+            passwordInput.style.borderColor = 'var(--error-color)';
+            return false;
+        }
+        
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+            passwordError.textContent = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+            passwordInput.style.borderColor = 'var(--error-color)';
             return false;
         }
         
         passwordError.textContent = '';
-        passwordInput.style.borderColor = '#28a745';
+        passwordInput.style.borderColor = 'var(--success-color)';
         return true;
     }
     
@@ -203,12 +307,12 @@ function initializeFormValidation() {
         
         if (isNameValid && isEmailValid && isPasswordValid) {
             // Form is valid - show success message
-            alert('Form submitted successfully!');
+            alert('Form submitted successfully! Thank you for your message.');
             form.reset();
             
             // Reset border colors
             [nameInput, emailInput, passwordInput].forEach(input => {
-                input.style.borderColor = '#ddd';
+                input.style.borderColor = 'var(--border-color)';
             });
         } else {
             // Form is invalid - show error message
@@ -218,11 +322,12 @@ function initializeFormValidation() {
 }
 
 // ==============================================
-// FEATURE 4: Password Visibility Toggle
+// FEATURE 5: Password Visibility Toggle
 // ==============================================
 function initializePasswordToggle() {
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
+    const icon = togglePassword.querySelector('i');
     
     /**
      * Toggle password visibility
@@ -230,16 +335,18 @@ function initializePasswordToggle() {
     togglePassword.addEventListener('click', function() {
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            this.textContent = '🔒';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
         } else {
             passwordInput.type = 'password';
-            this.textContent = '👁️';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
     });
 }
 
 // ==============================================
-// FEATURE 5: Modal Functionality
+// FEATURE 6: Modal Functionality
 // ==============================================
 function initializeModal() {
     const modal = document.getElementById('myModal');
