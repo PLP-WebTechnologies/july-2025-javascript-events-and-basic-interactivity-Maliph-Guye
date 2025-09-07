@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ondito's Modal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Ondito's Modal</h1>
+    </header>
+
+    <main>
+        <!-- Interactive Feature 1: Theme Toggle -->
+        <section class="theme-section">
+            <h2>Change theme</h2>
+            <button id="themeToggle" class="btn">Switch to Dark Mode</button>
+        </section>
+
+        <!-- Interactive Feature 2: Counter -->
+        <section class="counter-section">
+            <h2>Interactive Counter</h2>
+            <div class="counter-container">
+                <button id="decrement" class="btn">-</button>
+                <span id="counterValue">0</span>
+                <button id="increment" class="btn">+</button>
+            </div>
+            <button id="resetCounter" class="btn secondary">Reset Counter</button>
+        </section>
+
+        <!-- Form Section -->
+        <section class="form-section">
+            <h2>Contact Form</h2>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your name">
+                    <span class="error-message" id="nameError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email">
+                    <span class="error-message" id="emailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter password">
+                        <span class="toggle-password" id="togglePassword">👁️</span>
+                    </div>
+                    <span class="error-message" id="passwordError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" placeholder="Enter your message" rows="4"></textarea>
+                </div>
+
+                <button type="submit" class="btn submit-btn">Submit Form</button>
+            </form>
+        </section>
+
+        <!-- Modal Section -->
+        <section class="modal-section">
+            <h2>Modal Demo</h2>
+            <button id="openModal" class="btn">Open Modal</button>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Ondito's Modal!</h2>
+            <p>I dynamically created this modal window</p>
+            <p>You can close it by clicking the X button or anywhere outside the modal content.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
